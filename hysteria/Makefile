@@ -5,28 +5,24 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=hysteria
-PKG_VERSION:=1.0.1
-PKG_RELEASE:=$(AUTORELEASE)
+PKG_VERSION:=1.3.5
+PKG_RELEASE:=1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=https://codeload.github.com/HyNetwork/hysteria/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=de3a1dbc4a28bcddda2b1e918b0b309d822ab9eaad764564dfc064c2c0d0e667
+PKG_SOURCE_URL:=https://codeload.github.com/apernet/hysteria/tar.gz/v$(PKG_VERSION)?
+PKG_HASH:=9b3b5fca069d215a1f4c9cf3aa0a7b4e9b1fe21216fddb483a20ab42eb4a4dd7
 
 PKG_LICENSE:=MIT
 PKG_LICENSE_FILE:=LICENSE
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 
-PKG_CONFIG_DEPENDS:= \
-	CONFIG_HYSTERIA_COMPRESS_GOPROXY \
-	CONFIG_HYSTERIA_COMPRESS_UPX
-
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
+PKG_BUILD_FLAGS:=no-mips16
 
-GO_PKG:=github.com/tobyxdd/hysteria
-GO_PKG_BUILD_PKG:=github.com/tobyxdd/hysteria/cmd
-GO_PKG_LDFLAGS:=-s -w
+GO_PKG:=github.com/apernet/hysteria
+GO_PKG_BUILD_PKG:=$(GO_PKG)/app/cmd
 GO_PKG_LDFLAGS_X:=main.appVersion=$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
@@ -36,7 +32,7 @@ define Package/hysteria
   SECTION:=net
   CATEGORY:=Network
   TITLE:=A feature-packed network utility optimized for networks of poor quality
-  URL:=https://github.com/tobyxdd/hysteria
+  URL:=https://github.com/apernet/hysteria
   DEPENDS:=$(GO_ARCH_DEPENDS) +ca-bundle
 endef
 
@@ -47,31 +43,9 @@ define Package/hysteria/description
   of QUIC protocol.
 endef
 
-define Package/hysteria/config
-config HYSTERIA_COMPRESS_GOPROXY
-	bool "Compiling with GOPROXY proxy"
-	default n
-
-config HYSTERIA_COMPRESS_UPX
-	bool "Compress executable files with UPX"
-	depends on !mips64
-	default n	
-endef
-
-ifeq ($(CONFIG_HYSTERIA_COMPRESS_GOPROXY),y)
-	export GO111MODULE=on
-	export GOPROXY=https://goproxy.bj.bcebos.com
-endif
-
-define Build/Compile
-	$(call GoPackage/Build/Compile)
-ifeq ($(CONFIG_HYSTERIA_COMPRESS_UPX),y)
-	$(STAGING_DIR_HOST)/bin/upx --lzma --best $(GO_PKG_BUILD_BIN_DIR)/cmd
-endif
-endef
-
 define Package/hysteria/install
 	$(call GoPackage/Package/Install/Bin,$(PKG_INSTALL_DIR))
+
 	$(INSTALL_DIR) $(1)/usr/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/cmd $(1)/usr/bin/hysteria
 endef

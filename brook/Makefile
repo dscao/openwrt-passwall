@@ -5,12 +5,12 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=brook
-PKG_VERSION:=20220404
+PKG_VERSION:=20230606
 PKG_RELEASE:=$(AUTORELEASE)
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://codeload.github.com/txthinking/brook/tar.gz/v$(PKG_VERSION)?
-PKG_HASH:=a119adf673df8f61fcaec841e471392cfdd9d307fe52ec9d6b3d9393846a7630
+PKG_HASH:=4490f203973b59e5bbaa4cbfb8835232f9671dac1b82ab4de882d32a2ad6b612
 
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 PKG_LICENSE:=GPL-3.0
@@ -19,14 +19,10 @@ PKG_LICENSE_FILES:=LICENSE
 PKG_BUILD_DEPENDS:=golang/host
 PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
-
-PKG_CONFIG_DEPENDS:= \
-	CONFIG_BROOK_COMPRESS_GOPROXY \
-	CONFIG_BROOK_COMPRESS_UPX
+PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/txthinking/brook
-GO_PKG_BUILD_PKG:=github.com/txthinking/brook/cli/brook
-GO_PKG_LDFLAGS:=-s -w
+GO_PKG_BUILD_PKG:=$(GO_PKG)/cli/brook
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
@@ -43,29 +39,6 @@ endef
 define Package/brook/description
   Brook is a cross-platform strong encryption and not detectable proxy.
   Zero-Configuration.
-endef
-
-define Package/brook/config
-	config BROOK_COMPRESS_GOPROXY
-		bool "Compiling with GOPROXY proxy"
-		default n
-
-	config BROOK_COMPRESS_UPX
-		bool "Compress executable files with UPX"
-		depends on !mips64
-		default n
-endef
-
-ifeq ($(CONFIG_BROOK_COMPRESS_GOPROXY),y)
-	export GO111MODULE=on
-	export GOPROXY=https://goproxy.bj.bcebos.com
-endif
-
-define Build/Compile
-	$(call GoPackage/Build/Compile)
-ifeq ($(CONFIG_BROOK_COMPRESS_UPX),y)
-	$(STAGING_DIR_HOST)/bin/upx --lzma --best $(GO_PKG_BUILD_BIN_DIR)/brook
-endif
 endef
 
 $(eval $(call GoBinPackage,brook))
